@@ -84,7 +84,7 @@ def analyze_features(features_csv, output_dir):
 
 
 if __name__ == "__main__":
-    features_csv = r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Results\features\normal_features.csv"
-    output_dir = r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Results\analysis\normal"
+    features_csv = r"./Results/features/normal_features.csv"
+    output_dir = r"./Results/analysis/normal"
 
     analyze_features(features_csv, output_dir)
