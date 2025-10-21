@@ -42,7 +42,7 @@ def segment_cells(frames_dir, output_dir):
 if __name__ == "__main__":
     # Absolute paths for your setup
     if __name__ == "__main__":
-        frames_dir = r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Results\frames_cancer1"
-        output_dir = r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Results\segmentation_cancer1"
+        frames_dir = r"./Results/frames_cancer1"
+        output_dir = r"./Results/segmentation_cancer1"
 
     segment_cells(frames_dir, output_dir)

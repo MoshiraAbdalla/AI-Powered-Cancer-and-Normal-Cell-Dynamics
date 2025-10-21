@@ -3,8 +3,8 @@ import os
 import numpy as np
 
 # --- Paths to preprocessed frames and segmentation masks for Cancer1 ---
-frames_dir = r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Results\frames_cancer1"
-masks_dir = r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Results\segmentation_cancer1"
+frames_dir = r"./Results/frames_cancer1"
+masks_dir = r"./Results/segmentation_cancer1"
 
 # --- Sorted frame names to keep the same order ---
 frame_files = sorted(os.listdir(frames_dir))

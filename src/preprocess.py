@@ -66,8 +66,8 @@ def preprocess_video(video_path, output_dir):
 if __name__ == "__main__":
     # --- Absolute paths ---
     if __name__ == "__main__":
-        video_path = r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Dataset\Cancer1.mp4"
-        output_dir = r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Results\frames_cancer1"
+        video_path = r"./Dataset/Cancer1.mp4"
+        output_dir = r"./Results/frames_cancer1"
 
     # --- Run preprocessing ---
     preprocess_video(video_path, output_dir)

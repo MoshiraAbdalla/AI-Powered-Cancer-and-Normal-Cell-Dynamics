@@ -6,8 +6,8 @@ import numpy as np
 from skimage.measure import label, regionprops
 
 # --- Input directories ---
-segmentation_dir = r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Results\segmentation_cancer1"
-output_csv = r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Results\tracking\cancer1_tracks.csv"
+segmentation_dir = r"./Results/segmentation_cancer1"
+output_csv = r"./Results/tracking/cancer1_tracks.csv"
 
 # --- Parameters ---
 search_range = 20   # reduced for stability

@@ -43,8 +43,8 @@ def track_cells(segmentation_dir, output_csv):
 
 
 if __name__ == "__main__":
-    segmentation_dir = r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Results\segmentation"
-    output_csv = r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Results\tracking\normal_tracks.csv"
+    segmentation_dir = r"./Results/segmentation"
+    output_csv = r"./Results/tracking/normal_tracks.csv"
 
     os.makedirs(os.path.dirname(output_csv), exist_ok=True)
 

@@ -1,7 +1,7 @@
 import pandas as pd
 
 # Load tracked data
-df = pd.read_csv(r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Results\tracking\cancer1_tracks.csv")
+df = pd.read_csv(r"./Results/tracking/cancer1_tracks.csv")
 
 print("[INFO] Tracking Summary")
 print(f"Total unique cells tracked: {df['particle'].nunique()}")

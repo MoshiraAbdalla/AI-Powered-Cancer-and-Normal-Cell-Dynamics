@@ -2,7 +2,7 @@ import cv2
 import os
 
 # Path to your frames
-frames_dir = r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Results\frames"
+frames_dir = r"./Results/frames"
 
 # List all frames
 frame_files = sorted(os.listdir(frames_dir))

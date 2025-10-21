@@ -95,8 +95,8 @@ def compute_motion_features(tracks_csv, output_csv):
 
 if __name__ == "__main__":
     # Absolute paths
-    tracks_csv = r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Results\tracking\normal_tracks.csv"
-    output_csv = r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Results\features\normal_features.csv"
+    tracks_csv = r"./Results/tracking/normal_tracks.csv"
+    output_csv = r"./Results/features/normal_features.csv"
 
     os.makedirs(os.path.dirname(output_csv), exist_ok=True)
 

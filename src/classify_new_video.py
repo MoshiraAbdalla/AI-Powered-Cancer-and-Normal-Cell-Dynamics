@@ -7,10 +7,10 @@ import trackpy as tp
 from trackpy.linking.utils import SubnetOversizeException
 
 # ---------------- CONFIGURATION ----------------
-video_path = r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Dataset\Normal2.avi"
+video_path = r"./Dataset/Normal2.avi"
 
-frames_dir = r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Results\frames_temp"
-seg_dir = r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Results\segmentation_temp"
+frames_dir = r"./Results/frames_temp"
+seg_dir = r"./Results/segmentation_temp"
 os.makedirs(frames_dir, exist_ok=True)
 os.makedirs(seg_dir, exist_ok=True)
 

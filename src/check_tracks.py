@@ -1,6 +1,6 @@
 import pandas as pd
 
-tracks = pd.read_csv(r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Results\tracking\normal_tracks.csv")
+tracks = pd.read_csv(r"./Results/tracking/normal_tracks.csv")
 
 # Count how many frames each cell was tracked
 track_lengths = tracks.groupby('particle')['frame'].count()

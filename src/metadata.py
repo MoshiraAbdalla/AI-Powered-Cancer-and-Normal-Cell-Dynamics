@@ -30,8 +30,8 @@ def extract_metadata(video_path):
 
 
 if __name__ == "__main__":
-    video_path = r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Dataset\Cancer1.mp4"
-    output_csv = r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Results\cancer1_metadata.csv"
+    video_path = r"./Dataset/Cancer1.mp4"
+    output_csv = r"./Results/cancer1_metadata.csv"
 
 
     info = extract_metadata(video_path)
@@ -40,7 +40,7 @@ if __name__ == "__main__":
         pprint(info)
 
         # Save metadata to CSV for reference
-        output_csv = r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Results\normal_metadata.csv"
+        output_csv = r"./Results/normal_metadata.csv"
         pd.DataFrame([info]).to_csv(output_csv, index=False)
         print(f"\n[INFO] Metadata saved to: {output_csv}")
     else:

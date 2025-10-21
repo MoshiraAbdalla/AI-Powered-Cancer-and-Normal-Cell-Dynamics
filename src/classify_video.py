@@ -1,8 +1,8 @@
 import pandas as pd
 
 # Path to extracted features (change per video)
-features_path = r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Results\features\normal_features.csv"
-features_path1 = r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Results\features\cancer1_features.csv"
+features_path = r"./Results/features/normal_features.csv"
+features_path1 = r"./Results/features/cancer1_features.csv"
 
 # Load data
 df = pd.read_csv(features_path1)

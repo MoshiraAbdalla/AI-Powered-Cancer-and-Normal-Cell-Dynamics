@@ -14,8 +14,8 @@ import os
 # -----------------------------------------------------------------------------
 # Input/Output Paths
 # -----------------------------------------------------------------------------
-input_csv = r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Results\tracking\cancer1_tracks.csv"
-output_csv = r"C:\Users\shaha\PycharmProjects\cell_movement_analysis\Results\features\cancer1_features.csv"
+input_csv = r"./Results/tracking/cancer1_tracks.csv"
+output_csv = r"./Results/features/cancer1_features.csv"
 
 # Load tracking data
 df = pd.read_csv(input_csv)
