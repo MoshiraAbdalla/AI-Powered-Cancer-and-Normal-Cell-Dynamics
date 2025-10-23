@@ -31,6 +31,7 @@ def to_tk(img_bgr_or_gray, size=(520, 380)):
 
 
 def overlay_edges(gray_path, mask_path, out_size=(520, 380)):
+    """Purely a VIEW helper (does not change your segmentation)."""
     try:
         gray = cv2.imread(gray_path, cv2.IMREAD_GRAYSCALE)
         mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
@@ -66,12 +67,15 @@ def draw_tracks_overlay(base_frame_path, linked_df, size=(520, 380)):
     return ImageTk.PhotoImage(Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)))
 
 
-# ────────── pipeline (your exact logic) ──────────
-def run_pipeline(video_path, results_root, log_fn=print, progress_fn=lambda *_: None):
+# ────────── pipeline (your exact logic; added preview_fn calls only) ──────────
+def run_pipeline(video_path, results_root,
+                 log_fn=print,
+                 progress_fn=lambda *_: None,
+                 preview_fn=lambda *_: None):
     """
     Uses only the code you provided: extract frames -> Otsu segmentation -> centroid detection ->
     trackpy link_df (with SubnetOversizeException retry) -> feature means -> voting model.
-    Returns classification data and preview paths.
+    Emits live previews via preview_fn({...}) for the GUI.
     """
     run_name = os.path.splitext(os.path.basename(video_path))[0]
     out_dir = os.path.join(results_root, run_name)
@@ -84,18 +88,28 @@ def run_pipeline(video_path, results_root, log_fn=print, progress_fn=lambda *_: 
     progress_fn(1, "Extracting frames…")
     log_fn("\n[INFO] Extracting frames...")
     cap = cv2.VideoCapture(video_path)
-    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) or 0
     fps = cap.get(cv2.CAP_PROP_FPS)
     res = (int(cap.get(3)), int(cap.get(4)))
     log_fn(f"[INFO] Video Metadata:\nFrames: {frame_count}, FPS: {fps}, Resolution: {res}")
 
     i = 0
+    PREV_EVERY = 10  # preview every N frames to keep UI responsive
     while True:
         ret, frame = cap.read()
         if not ret:
             break
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        io.imsave(os.path.join(frames_dir, f"frame_{i:03d}.png"), gray)
+        fpath = os.path.join(frames_dir, f"frame_{i:03d}.png")
+        io.imsave(fpath, gray)
+
+        if i % PREV_EVERY == 0:
+            # live preview of preprocessed frame
+            preview_fn({"type": "pre_frame", "path": fpath})
+        if frame_count:
+            frac = min(0.99, (i + 1) / frame_count)
+            preview_fn({"type": "progress", "base": 0, "frac": frac, "msg": f"Extracting frames… ({i+1}/{frame_count})"})
+
         i += 1
     cap.release()
     log_fn(f"[INFO] Saved {i} frames to '{frames_dir}'")
@@ -104,13 +118,26 @@ def run_pipeline(video_path, results_root, log_fn=print, progress_fn=lambda *_: 
     # 2) Segmentation
     progress_fn(2, "Segmenting cells…")
     log_fn("\n[INFO] Performing segmentation...")
-    for f in frame_files:
+    SEG_PREV_EVERY = 10
+    for idx, f in enumerate(frame_files):
         img = io.imread(os.path.join(frames_dir, f))
         thr = filters.threshold_otsu(img)
         mask = img > thr
         mask = morphology.remove_small_objects(mask, 40)
         mask = morphology.remove_small_holes(mask, 40)
-        io.imsave(os.path.join(seg_dir, f), (mask * 255).astype(np.uint8))
+        mpath = os.path.join(seg_dir, f)
+        io.imsave(mpath, (mask * 255).astype(np.uint8))
+
+        if idx % SEG_PREV_EVERY == 0:
+            preview_fn({
+                "type": "seg_overlay",
+                "frame_path": os.path.join(frames_dir, f),
+                "mask_path": mpath
+            })
+        total = max(1, len(frame_files))
+        frac = (idx + 1) / total
+        preview_fn({"type": "progress", "base": 1, "frac": frac, "msg": f"Segmenting cells… ({idx+1}/{total})"})
+
     log_fn(f"[INFO] Segmentation complete – saved masks to '{seg_dir}'")
     mask_files = sorted([f for f in os.listdir(seg_dir) if f.endswith(".png")])
 
@@ -138,8 +165,14 @@ def run_pipeline(video_path, results_root, log_fn=print, progress_fn=lambda *_: 
     cells = int(linked["particle"].nunique()) if "particle" in linked.columns else 0
     log_fn(f"[INFO] Tracking complete – {cells} cells identified.")
 
+    # show a tracking overlay immediately
+    if frame_files:
+        last_frame_path = os.path.join(frames_dir, frame_files[-1])
+        preview_fn({"type": "tracking_overlay", "frame_path": last_frame_path, "linked_df": linked})
+    preview_fn({"type": "progress", "base": 2, "frac": 1.0, "msg": "Tracking cells… done"})
+
     # 4) Features
-    progress_fn(4, "Computing features…")
+    preview_fn({"type": "progress", "base": 3, "frac": 0.2, "msg": "Computing features…"})
     log_fn("\n[INFO] Computing motion features...")
     features = []
     for pid, g in linked.groupby("particle"):
@@ -152,6 +185,7 @@ def run_pipeline(video_path, results_root, log_fn=print, progress_fn=lambda *_: 
         ang = np.mean(np.abs(np.degrees(np.arctan2(dy, dx))))
         features.append([pid, speed, disp, ang])
     feat_df = pd.DataFrame(features, columns=["particle", "speed", "disp", "angle"])
+    preview_fn({"type": "progress", "base": 3, "frac": 1.0, "msg": "Computing features… done"})
     log_fn(f"[INFO] Computed features for {len(feat_df)} cells.")
 
     if len(feat_df) == 0:
@@ -166,18 +200,19 @@ def run_pipeline(video_path, results_root, log_fn=print, progress_fn=lambda *_: 
     log_fn(f"Mean Turn Angle: {mean_angle:.2f}°")
 
     # 5) Classification (voting model)
-    progress_fn(5, "Classifying…")
+    preview_fn({"type": "progress", "base": 4, "frac": 0.4, "msg": "Classifying…"})
     norm = {'speed': 35.96, 'disp': 26.08, 'angle': 69.7}
     canc = {'speed': 61.95, 'disp': 15.48, 'angle': 90.89}
     th_speed = (norm['speed'] + canc['speed']) / 2
     th_disp  = (norm['disp']  + canc['disp'])  / 2
     th_angle = (norm['angle'] + canc['angle']) / 2
     votes = {"Cancer": 0, "Normal": 0}
-    votes["Cancer" if mean_speed > th_speed else "Normal"] += 1    # speed (higher → cancer)
-    votes["Normal" if mean_disp > th_disp else "Cancer"] += 1      # displacement (higher → normal)
-    votes["Cancer" if mean_angle > th_angle else "Normal"] += 1    # angle (higher → cancer)
+    votes["Cancer" if mean_speed > th_speed else "Normal"] += 1
+    votes["Normal" if mean_disp > th_disp else "Cancer"] += 1
+    votes["Cancer" if mean_angle > th_angle else "Normal"] += 1
     classification = "Cancer Cell" if votes["Cancer"] > votes["Normal"] else "Normal Cell"
     cancer_likeness = votes["Cancer"] / 3.0
+    preview_fn({"type": "progress", "base": 4, "frac": 1.0, "msg": "Classifying… done"})
 
     log_fn(f"\n[RESULT] Classification: {classification}")
     log_fn(f"[INFO] Cancer-Likeness Score: {cancer_likeness:.2f}")
@@ -223,6 +258,45 @@ class App(tk.Tk):
         self.img_track = None
 
         self.build_ui()
+
+    # ---------- thread-safe preview receiver ----------
+    def preview_cb(self, evt: dict):
+        """Receive live preview/progress events from the worker thread."""
+        def _apply():
+            typ = evt.get("type")
+            if typ == "pre_frame":
+                img = cv2.imread(evt["path"], cv2.IMREAD_GRAYSCALE)
+                if img is not None:
+                    self.img_pre = to_tk(img)
+                    self.lbl_pre.configure(image=self.img_pre, text="")
+                    self.tabs.select(self.tab_pre)
+
+            elif typ == "seg_overlay":
+                ov = overlay_edges(evt["frame_path"], evt["mask_path"])
+                if ov:
+                    self.img_seg = ov
+                    self.lbl_seg.configure(image=self.img_seg, text="")
+                    self.tabs.select(self.tab_seg)
+
+            elif typ == "tracking_overlay":
+                trk = draw_tracks_overlay(evt["frame_path"], evt["linked_df"])
+                if trk:
+                    self.img_track = trk
+                    self.lbl_track.configure(image=self.img_track, text="")
+                    self.tabs.select(self.tab_track)
+
+            elif typ == "log":
+                self.log_write(evt.get("msg", ""))
+
+            elif typ == "progress":
+                base = evt.get("base", 0)   # 0..4 (before each step)
+                frac = float(evt.get("frac", 0.0))  # 0..1 inside the step
+                # progress bar maximum is 5 (five steps). Set value to base+frac.
+                self.progress["value"] = min(5, base + frac)
+                msg = evt.get("msg")
+                if msg:
+                    self.step_var.set(msg)
+        self.after(0, _apply)
 
     def build_ui(self):
         pad = 10
@@ -386,44 +460,19 @@ class App(tk.Tk):
                 self.log_write(f"[STEP] {msg}")
 
             classification, votes, means, previews = run_pipeline(
-                self.video_path, self.results_root, log_fn=self.log_write, progress_fn=progress
+                self.video_path,
+                self.results_root,
+                log_fn=self.log_write,
+                progress_fn=progress,
+                preview_fn=self.preview_cb,  # <<< live updates
             )
 
-            # Preprocess preview
-            frames = previews["frame_files"]
-            masks  = previews["mask_files"]
-            frames_dir = previews["frames_dir"]
-            seg_dir = previews["seg_dir"]
-            linked = previews["linked_df"]
-
-            if frames:
-                mid = frames[len(frames)//2]
-                img = cv2.imread(os.path.join(frames_dir, mid), cv2.IMREAD_GRAYSCALE)
-                self.img_pre = to_tk(img)
-                self.lbl_pre.configure(image=self.img_pre, text="")
-
-            # Segmentation overlay
-            if frames and masks:
-                i = min(len(frames), len(masks)) // 2
-                ov = overlay_edges(os.path.join(frames_dir, frames[i]), os.path.join(seg_dir, masks[i]))
-                if ov:
-                    self.img_seg = ov
-                    self.lbl_seg.configure(image=self.img_seg, text="")
-
-            # Tracking overlay (draw lines on last frame)
-            if frames and hasattr(linked, "empty") and not linked.empty:
-                last_frame = os.path.join(frames_dir, frames[-1])
-                trk = draw_tracks_overlay(last_frame, linked)
-                if trk:
-                    self.img_track = trk
-                    self.lbl_track.configure(image=self.img_track, text="")
-
-            # Classification results
+            # Final classification results
             self.pred_var.set(classification)
             self.lbl_pred.configure(foreground=("#c62828" if classification.startswith("Cancer") else "#1565c0"))
             self.vote_var.set(f"Cancer: {votes['Cancer']} | Normal: {votes['Normal']}")
 
-            # finish bar
+            # Finish bar
             self.progress["value"] = 5
             self.step_var.set("Done")
             self.tabs.select(self.tab_cls)
