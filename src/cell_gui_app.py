@@ -7,6 +7,7 @@ import time
 import threading
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
+import hashlib
 
 import cv2
 import numpy as np
@@ -15,6 +16,12 @@ from PIL import Image, ImageTk
 from skimage import io, filters, morphology, measure
 import trackpy as tp
 from trackpy.linking.utils import SubnetOversizeException
+import matplotlib
+
+matplotlib.use("Agg")
+from matplotlib import cm
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 
 # ────────── helpers for UI images ──────────

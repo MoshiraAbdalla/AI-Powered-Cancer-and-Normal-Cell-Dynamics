@@ -1,5 +1,6 @@
-opencv-python
+﻿opencv-python
 numpy
 pandas
+pillow
 scikit-image
 trackpy
