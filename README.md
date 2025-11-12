@@ -1,4 +1,4 @@
-# Cell Movement Classifier GUI (Diffusion Edition)
+# Cell  Classifier GUI 
 
 `GUI_diff.py` is the "pro" Tkinter interface for the cell-movement pipeline. It exposes the full preprocess -> segment -> track -> feature -> classify workflow, adds live previews for every stage, records detailed logs, and introduces diffusion-entropy assisted voting so clinicians can see *why* a sample looks normal or cancerous.
 
