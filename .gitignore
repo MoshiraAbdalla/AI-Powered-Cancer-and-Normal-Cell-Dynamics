@@ -1,6 +1,6 @@
-./src/ResultsGUI
-./src/Results
-./Dataset
-./Results
+src/ResultsGUI
+src/Results
+Dataset
+Results
 .venv
-./GUI_recording
+GUI_recording
