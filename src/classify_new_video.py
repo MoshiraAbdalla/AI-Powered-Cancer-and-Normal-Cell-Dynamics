@@ -8,9 +8,11 @@ from trackpy.linking.utils import SubnetOversizeException
 
 # ---------------- CONFIGURATION ----------------
 video_path = r"Dataset\Normal2.avi"
-video_path = r"Dataset\Cancer1.mp4"
-frames_dir = r"Results\frames_temp"
-seg_dir = r"Results\segmentation_temp"
+# video_path = r"Dataset\Cancer2.mp4"
+frames_dir = r"Results\frames_temp_N2"
+seg_dir = r"Results\segmentation_temp_N2"
+# frames_dir = r"Results\frames_temp_c2"
+# seg_dir = r"Results\segmentation_temp_c2"
 os.makedirs(frames_dir, exist_ok=True)
 os.makedirs(seg_dir, exist_ok=True)
 
